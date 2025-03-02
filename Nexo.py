@@ -59,6 +59,25 @@ def speak(text):
     engine.runAndWait()
 
 
+def on_press(key):
+    
+    if key == keyboard.Key.esc:
+        return False  # stop listener
+    try:
+        k = key.char  # single-char keys
+    except:
+        k = key.name  # other keys
+    if k in ["1", "2", "left", "right"]:  # keys of interest
+        # self.keys.append(k)  # store it in global-like variable
+        print("Key pressed: " + k)
+        return False  # stop listener; remove this if want more keys
+
+def on_release(key):
+    print("{0} release".format(key))
+    if key == Key.esc():
+        # Stop listener
+        return False
+    
 def speak_news():
     """Fetch and speak top news headlines."""
     url = "http://newsapi.org/v2/top-headlines?sources=the-times-of-india&apiKey=yourapikey"
