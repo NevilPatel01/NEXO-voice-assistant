@@ -12,17 +12,23 @@ import smtplib
 import json
 import os
 import base64
+import threading
+import time
+
 import requests
 import pyttsx3
 import pyjokes
 import speech_recognition as sr
 import openai
+import psutil
 from PIL import ImageGrab
 from gtts import gTTS
 from playsound import playsound
 from pynput import keyboard
 from pynput.keyboard import Key, Listener
 from pynput.mouse import Controller
+
+
 
 # Initialize text-to-speech engine
 engine = pyttsx3.init()
@@ -38,7 +44,6 @@ openai.api_key = api_key
 # Configuration constants
 MUSIC_DIR = "C:\\Music"  # Update with your music directory
 SCREENSHOT_DIR = "C:\\Screenshots"  # Update with preferred screenshot location
-
 
 
 def speak(text):
@@ -63,7 +68,12 @@ def speak_news():
     speak("These were the top headlines. Have a great day!")
 
 def send_email(to, content):
-    """Send an email via SMTP."""
+    """Send email using SMTP protocol.
+    
+    Args:
+        to (str): Recipient email address
+        content (str): Email body content
+    """
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
     server.login("youremail@gmail.com", "your-password")
@@ -71,9 +81,16 @@ def send_email(to, content):
     server.close()
 
 def ask_gpt3(question):
-    """Ask OpenAI's GPT-3 a question and get a response."""
+    """Query fine-tuned model for responses.
+    
+    Args:
+        question (str): User's question/prompt
+        
+    Returns:
+        str: AI-generated response
+    """
     response = openai.Completion.create(
-        engine="text-davinci-002", prompt=f"Answer: {question}\n", max_tokens=150, temperature=0.7
+            model="ft:gpt-3.5-turbo-0125:personal::AU5skETV", prompt=f"Answer: {question}\n", max_tokens=150, temperature=0.7
     )
     return response.choices[0].text.strip()
 
@@ -89,7 +106,11 @@ def wish_user():
     speak("I am Nexo! How can I assist you?")
 
 def take_command():
-    """Capture and recognize speech input from the user."""
+    """Capture and process voice input using Google's speech recognition.
+    
+    Returns:
+        str: Recognized text input
+    """
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
         print("Listening...")
@@ -103,7 +124,11 @@ def take_command():
         return "None"
 
 def open_application(command):
-    """Open applications based on voice command."""
+    """Launch Windows applications based on voice command.
+    
+    Args:
+        command (str): Name of application to open
+    """
     apps = {
         "notepad": "Notepad.exe",
         "calculator": "calc.exe",
@@ -116,6 +141,15 @@ def open_application(command):
         "docker": "docker desktop",
         "task manager": "taskmgr.exe",
         "file explorer": "explorer.exe",
+        "spotify": "Spotify.exe",
+        "zoom": "Zoom.exe",
+        "chrome": "chrome.exe",
+        "word": "WINWORD.EXE",
+        "excel": "EXCEL.EXE",
+        "powerpoint": "POWERPNT.EXE",
+        "outlook": "OUTLOOK.EXE",
+        "teams": "Teams.exe",
+        "whatsapp": "WhatsApp.exe"
     }
     if command in apps:
         subprocess.run(apps[command], shell=True)
@@ -123,13 +157,23 @@ def open_application(command):
         speak("Application not found in my list.")
 
 def open_website(command):
-    """Open common websites based on voice command."""
+    """Open web pages in default browser.
+    
+    Args:
+        command (str): Name of website to open
+    """
     sites = {
         "youtube": "https://www.youtube.com/",
         "google": "https://www.google.com/",
         "github": "https://github.com/NevilPatel01",
         "stackoverflow": "https://stackoverflow.com/",
         "linkedin": "https://www.linkedin.com/",
+        "twitter": "https://twitter.com/",
+        "facebook": "https://facebook.com/",
+        "instagram": "https://instagram.com/",
+        "wikipedia": "https://wikipedia.org/",
+        "netflix": "https://netflix.com/",
+        "amazon": "https://amazon.com/"
     }
     if command in sites:
         webbrowser.open(sites[command])
@@ -146,44 +190,162 @@ def take_screenshot():
     except Exception as e:
         speak(f"Screenshot failed: {str(e)}")
 
+def get_weather(city_name):
+    """Retrieve and announce weather information.
+    
+    Args:
+        city_name (str): City for weather lookup
+    """
+    try:
+        api_key = "your_openweather_api_key"
+        base_url = "http://api.openweathermap.org/data/2.5/weather?"
+        complete_url = f"{base_url}appid={api_key}&q={city_name}&units=metric"
+        response = requests.get(complete_url)
+        data = response.json()
+        
+        if data["cod"] != 404:
+            main = data["main"]
+            temperature = main["temp"]
+            humidity = main["humidity"]
+            weather_desc = data["weather"][0]["description"]
+            speak(f"The temperature in {city_name} is {temperature}°C with {weather_desc}. Humidity is {humidity}%.")
+        else:
+            speak("City not found.")
+    except Exception as e:
+        speak("Weather service unavailable. Check your internet connection.")
+
+def set_reminder():
+    """Create timed reminder based on user input."""
+    speak("What should I remind you about?")
+    message = take_command()
+    if message == "none":
+        return
+
+    speak("In how many minutes?")
+    time_input = take_command()
+    try:
+        minutes = int(''.join(filter(str.isdigit, time_input)))
+        seconds = minutes * 60
+        threading.Timer(seconds, lambda: speak(f"Reminder: {message}")).start()
+        speak(f"Reminder set for {minutes} minutes.")
+    except:
+        speak("Invalid time format. Please try again.")
+
+def play_music():
+    """Play random music file from predefined directory."""
+    try:
+        songs = os.listdir(MUSIC_DIR)
+        if songs:
+            os.startfile(os.path.join(MUSIC_DIR, songs[0]))
+        else:
+            speak("No music files found.")
+    except Exception as e:
+        speak(f"Music playback error: {str(e)}")
+
+def get_system_info():
+    """Provide system status updates."""
+    battery = psutil.sensors_battery()
+    if battery:
+        status = "plugged in" if battery.power_plugged else "not plugged in"
+        speak(f"Battery is at {battery.percent}% and {status}.")
+    else:
+        speak("Battery information unavailable.")
+
+    cpu_usage = psutil.cpu_percent()
+    memory_usage = psutil.virtual_memory().percent
+    speak(f"Current CPU usage is {cpu_usage}% and memory usage is {memory_usage}%.")
+
+def show_help():
+    """Display available commands in console."""
+    help_text = """
+    Available Commands:
+    - Open [application]: Launch installed programs
+    - Website [name]: Open common websites
+    - News: Current headlines
+    - Screenshot: Capture screen
+    - Joke: Tell a joke
+    - Email: Send messages
+    - Search for [query]: AI-powered search
+    - Weather in [city]: Get weather updates
+    - Set reminder: Create timed reminder
+    - Play music: Audio playback
+    - System info: Battery and performance
+    - Help: Show this message
+    - Exit: Close assistant
+    """
+    print(help_text)
+    speak("Here are the available commands. Check console for details.")
+
+
 def tell_joke():
     """Tell a random joke."""
     speak(pyjokes.get_joke())
 
 def main():
-    """Main loop to process voice commands."""
+    """Main program loop handling voice commands."""
     wish_user()
     while True:
-        query = take_command().lower()
-        if query == "exit" or query == "quit":
+        query = take_command()
+        
+        if not query or query == "none":
+            continue
+            
+        if "exit" in query or "quit" in query:
             speak("Goodbye! Have a great day.")
             break
+            
         elif "open" in query:
-            app_name = query.replace("open ", "")
+            app_name = query.replace("open ", "").strip()
             open_application(app_name)
+            
         elif "search for" in query:
-            question = query.replace("search for", "")
-            answer = ask_gpt3(question)
-            speak(answer)
+            question = query.replace("search for", "").strip()
+            speak(ask_gpt3(question))
+            
         elif "news" in query:
             speak_news()
+            
         elif "screenshot" in query:
             take_screenshot()
+            
         elif "joke" in query:
             tell_joke()
+            
         elif "email" in query:
             try:
-                speak("What should I say?")
+                speak("What's the message content?")
                 content = take_command()
                 send_email("recipient@example.com", content)
-                speak("Email has been sent!")
-            except:
-                speak("Sorry, I couldn't send the email.")
+            except Exception as e:
+                speak(f"Email error: {str(e)}")
+                
         elif "website" in query:
-            site_name = query.replace("website ", "")
+            site_name = query.replace("website", "").strip()
             open_website(site_name)
+            
+        elif "weather" in query:
+            if "in" in query:
+                city = query.split("in")[-1].strip()
+            else:
+                speak("Which city's weather?")
+                city = take_command()
+            if city != "none":
+                get_weather(city)
+                
+        elif "reminder" in query:
+            set_reminder()
+            
+        elif "play music" in query:
+            play_music()
+            
+        elif "system" in query or "battery" in query:
+            get_system_info()
+            
+        elif "help" in query:
+            show_help()
+            
         else:
-            speak("I'm not sure how to help with that.")
+            speak("I'm not sure how to help with that. Try 'help' for commands.")
 
 if __name__ == "__main__":
     main()
