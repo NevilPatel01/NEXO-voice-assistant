@@ -147,6 +147,8 @@ def main():
             question = query.replace("search for", "")
             answer = ask_gpt3(question)
             speak(answer)
+        elif "news" in query:
+            speak_news()
         elif "joke" in query:
             tell_joke()
         elif "email" in query:
