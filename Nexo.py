@@ -40,6 +40,14 @@ def speak(text):
     engine.say(text)
     engine.runAndWait()
 
+def send_email(to, content):
+    """Send an email via SMTP."""
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
+    server.login("youremail@gmail.com", "your-password")
+    server.sendmail("youremail@gmail.com", to, content)
+    server.close()
+
 def speak_news():
     """Fetch and speak top news headlines."""
     url = "http://newsapi.org/v2/top-headlines?sources=the-times-of-india&apiKey=yourapikey"
@@ -118,6 +126,12 @@ def open_website(command):
     else:
         speak("Website not available in my list.")
 
+
+
+def tell_joke():
+    """Tell a random joke."""
+    speak(pyjokes.get_joke())
+
 def main():
     """Main loop to process voice commands."""
     wish_user()
@@ -133,7 +147,16 @@ def main():
             question = query.replace("search for", "")
             answer = ask_gpt3(question)
             speak(answer)
-      
+        elif "joke" in query:
+            tell_joke()
+        elif "email" in query:
+            try:
+                speak("What should I say?")
+                content = take_command()
+                send_email("recipient@example.com", content)
+                speak("Email has been sent!")
+            except:
+                speak("Sorry, I couldn't send the email.")
         elif "website" in query:
             site_name = query.replace("website ", "")
             open_website(site_name)
