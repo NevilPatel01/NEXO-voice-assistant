@@ -35,10 +35,21 @@ api_key = base64.b64decode(
 ).decode("utf-8")
 openai.api_key = api_key
 
+# Configuration constants
+MUSIC_DIR = "C:\\Music"  # Update with your music directory
+SCREENSHOT_DIR = "C:\\Screenshots"  # Update with preferred screenshot location
+
+
+
 def speak(text):
-    """Convert text to speech."""
+    """Convert text to speech using pyttsx3 engine.
+    
+    Args:
+        text (str): Text to be spoken aloud
+    """
     engine.say(text)
     engine.runAndWait()
+
 
 def speak_news():
     """Fetch and speak top news headlines."""
@@ -126,10 +137,14 @@ def open_website(command):
         speak("Website not available in my list.")
 
 def take_screenshot():
-    """Capture and save a screenshot."""
-    filename = f"C:\\Screenshots\\screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png"
-    ImageGrab.grab().save(filename)
-    speak("Screenshot saved successfully.")
+    """Enhanced screenshot capture with directory creation"""
+    try:
+        os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+        filename = f"{SCREENSHOT_DIR}\\screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+        ImageGrab.grab().save(filename)
+        speak("Screenshot captured successfully")
+    except Exception as e:
+        speak(f"Screenshot failed: {str(e)}")
 
 def tell_joke():
     """Tell a random joke."""
