@@ -12,7 +12,6 @@ import datetime
 import subprocess
 import webbrowser
 import smtplib
-import json
 import os
 import base64
 import threading
@@ -28,8 +27,8 @@ from PIL import ImageGrab
 from gtts import gTTS
 from playsound import playsound
 from pynput import keyboard
-from pynput.keyboard import Key, Listener
-from pynput.mouse import Controller
+from pynput.keyboard import Key, Controller as KeyboardController
+from pynput.mouse import Button, Controller as MouseController
 
 
 
@@ -37,6 +36,10 @@ from pynput.mouse import Controller
 engine = pyttsx3.init()
 engine.setProperty("voice", engine.getProperty("voices")[0].id)
 engine.setProperty("rate", 150)
+
+# Initialize keyboard and mouse controllers
+keyboard_ctrl = KeyboardController()
+mouse_ctrl = MouseController()
 
 # Decode API Key for OpenAI (Replace with your API key securely)
 api_key = base64.b64decode(
@@ -115,6 +118,80 @@ def ask_gpt3(question):
             model="ft:gpt-3.5-turbo-0125:personal::AU5skETV", prompt=f"Answer: {question}\n", max_tokens=150, temperature=0.7
     )
     return response.choices[0].text.strip()
+
+# Add these functions to your code
+def control_keyboard(command):
+    """Control keyboard based on voice commands."""
+    try:
+        if 'type' in command:
+            text = command.replace('type ', '').strip()
+            keyboard_ctrl.type(text)
+            speak(f"Typed: {text}")
+        elif 'press' in command:
+            key = command.replace('press ', '').strip().lower()
+            if key in ['enter', 'space', 'esc', 'tab']:
+                key_obj = getattr(Key, key)
+                keyboard_ctrl.press(key_obj)
+                keyboard_ctrl.release(key_obj)
+                speak(f"Pressed {key}")
+            else:
+                speak(f"Key {key} not supported.")
+    except Exception as e:
+        speak(f"Keyboard control error: {str(e)}")
+
+def control_mouse(command):
+    """Control mouse based on voice commands."""
+    try:
+        if 'click' in command:
+            if 'left' in command:
+                mouse_ctrl.click(Button.left)
+                speak("Left click performed.")
+            elif 'right' in command:
+                mouse_ctrl.click(Button.right)
+                speak("Right click performed.")
+        elif 'move' in command:
+            if 'left' in command:
+                mouse_ctrl.move(-100, 0)  # Move left by 100 pixels
+            elif 'right' in command:
+                mouse_ctrl.move(100, 0)  # Move right by 100 pixels
+            elif 'up' in command:
+                mouse_ctrl.move(0, -100)  # Move up by 100 pixels
+            elif 'down' in command:
+                mouse_ctrl.move(0, 100)  # Move down by 100 pixels
+            speak("Mouse moved.")
+        elif 'scroll' in command:
+            if 'up' in command:
+                mouse_ctrl.scroll(0, 1)  # Scroll up
+            elif 'down' in command:
+                mouse_ctrl.scroll(0, -1)  # Scroll down
+            speak("Scrolled.")
+    except Exception as e:
+        speak(f"Mouse control error: {str(e)}")
+
+def start_recording():
+    """Start screen recording using Win + Alt + R."""
+    try:
+        with keyboard_ctrl.pressed(Key.cmd, Key.alt, 'r'):
+            speak("Started recording. Say 'stop recording' to stop.")
+    except Exception as e:
+        speak(f"Recording error: {str(e)}")
+
+def stop_recording():
+    """Stop screen recording using Win + Alt + R."""
+    try:
+        with keyboard_ctrl.pressed(Key.cmd, Key.alt, 'r'):
+            speak("Stopped recording. Check your captures folder.")
+    except Exception as e:
+        speak(f"Recording error: {str(e)}")
+
+def take_clip():
+    """Take a clip using Win + Alt + G."""
+    try:
+        with keyboard_ctrl.pressed(Key.cmd, Key.alt, 'g'):
+            speak("Clipped. Check your game bar folder.")
+    except Exception as e:
+        speak(f"Clip error: {str(e)}")
+
 
 def wish_user():
     """Greet the user based on the time of day."""
@@ -307,7 +384,7 @@ def main():
     """Main program loop handling voice commands."""
     wish_user()
     while True:
-        query = take_command()
+        query = take_command().lower()
         
         if not query or query == "none":
             continue
@@ -365,6 +442,20 @@ def main():
             
         elif "help" in query:
             show_help()
+
+        # Add new keyboard and mouse commands
+        elif "type" in query:
+            control_keyboard(query)
+        elif "press" in query:
+            control_keyboard(query)
+        elif "click" in query or "move" in query or "scroll" in query:
+            control_mouse(query)
+        elif "start recording" in query:
+            start_recording()
+        elif "stop recording" in query:
+            stop_recording()
+        elif "clip that" in query:
+            take_clip()
             
         else:
             speak("I'm not sure how to help with that. Try 'help' for commands.")
