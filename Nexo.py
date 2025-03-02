@@ -15,7 +15,6 @@ import smtplib
 import os
 import base64
 import threading
-import time
 
 import requests
 import pyttsx3
@@ -24,12 +23,9 @@ import speech_recognition as sr
 import openai
 import psutil
 from PIL import ImageGrab
-from gtts import gTTS
-from playsound import playsound
 from pynput import keyboard
 from pynput.keyboard import Key, Controller as KeyboardController
 from pynput.mouse import Button, Controller as MouseController
-
 
 
 # Initialize text-to-speech engine
@@ -50,7 +46,6 @@ openai.api_key = api_key
 # Configuration constants
 MUSIC_DIR = "C:\\Music"  # Update with your music directory
 SCREENSHOT_DIR = "C:\\Screenshots"  # Update with preferred screenshot location
-
 
 def speak(text):
     """Convert text to speech using pyttsx3 engine.
