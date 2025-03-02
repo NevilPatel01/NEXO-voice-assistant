@@ -59,6 +59,14 @@ def speak_news():
             break
     speak("These were the top headlines. Have a great day∂!")
 
+def send_email(to, content):
+    """Send an email via SMTP."""
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
+    server.login("youremail@gmail.com", "your-password")
+    server.sendmail("youremail@gmail.com", to, content)
+    server.close()
+
 
 def ask_gpt3(question):
     """Ask Fine-tuned GPT a question and get a response."""
