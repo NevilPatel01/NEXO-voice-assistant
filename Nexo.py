@@ -1,5 +1,8 @@
 """
-NEXO Voice Assistant: Control Windows programs with your voice
+NEXO is an advanced voice-controlled Windows assistant powered by a custom fine-tuned GPT model, offering seamless integration with system operations, third-party apps, and smart automation. 
+It features voice-controlled application/web management, AI-powered Q&A, email automation, real-time news/weather updates, hardware control (mouse/keyboard), system monitoring, 
+and multi-layer error handling with hybrid TTS/STT systems - all tailored for enhanced Windows productivity through natural language commands.
+
 Author: Nevil Patel
 Version: v0.1
 """
