@@ -29,7 +29,7 @@ engine = pyttsx3.init()
 engine.setProperty("voice", engine.getProperty("voices")[0].id)
 engine.setProperty("rate", 150)
 
-# Decode API Key for OpenAI 
+# Decode API Key for OpenAI (Replace with your API key securely)
 api_key = base64.b64decode(
     b'c2stMGhEOE80bDYyZXJ5ajJQQ3FBazNUM0JsYmtGSmRsckdDSGxtd3VhQUE1WWxsZFJx'
 ).decode("utf-8")
@@ -40,14 +40,6 @@ def speak(text):
     engine.say(text)
     engine.runAndWait()
 
-def send_email(to, content):
-    """Send an email via SMTP."""
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    server.starttls()
-    server.login("youremail@gmail.com", "your-password")
-    server.sendmail("youremail@gmail.com", to, content)
-    server.close()
-
 def speak_news():
     """Fetch and speak top news headlines."""
     url = "http://newsapi.org/v2/top-headlines?sources=the-times-of-india&apiKey=yourapikey"
@@ -57,7 +49,7 @@ def speak_news():
         speak(article.get("title", "No title available"))
         if index == 4:  # Read only the first 5 headlines
             break
-    speak("These were the top headlines. Have a great day∂!")
+    speak("These were the top headlines. Have a great day!")
 
 def send_email(to, content):
     """Send an email via SMTP."""
@@ -67,11 +59,10 @@ def send_email(to, content):
     server.sendmail("youremail@gmail.com", to, content)
     server.close()
 
-
 def ask_gpt3(question):
-    """Ask Fine-tuned GPT a question and get a response."""
+    """Ask OpenAI's GPT-3 a question and get a response."""
     response = openai.Completion.create(
-        model="ft:gpt-3.5-turbo-0125:personal::AU5skETV", prompt=f"Answer: {question}\n", max_tokens=150, temperature=0.7
+        engine="text-davinci-002", prompt=f"Answer: {question}\n", max_tokens=150, temperature=0.7
     )
     return response.choices[0].text.strip()
 
@@ -134,7 +125,11 @@ def open_website(command):
     else:
         speak("Website not available in my list.")
 
-
+def take_screenshot():
+    """Capture and save a screenshot."""
+    filename = f"C:\\Screenshots\\screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png"
+    ImageGrab.grab().save(filename)
+    speak("Screenshot saved successfully.")
 
 def tell_joke():
     """Tell a random joke."""
@@ -157,6 +152,8 @@ def main():
             speak(answer)
         elif "news" in query:
             speak_news()
+        elif "screenshot" in query:
+            take_screenshot()
         elif "joke" in query:
             tell_joke()
         elif "email" in query:
