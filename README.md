@@ -6,10 +6,6 @@
 **Custom GPT-Enhanced Voice Automation Suite**  
 *Precision Windows Control Through Natural Language Commands*
 
-<div align="center">
-  <img src="nexo-demo.gif" width="700" alt="Feature Demonstration">
-</div>
-
 ## 🛠️ Feature Matrix
 
 ### 🎯 Core Capabilities
